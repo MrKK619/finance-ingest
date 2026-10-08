@@ -102,6 +102,14 @@ The **Real-Time Market Data Ingestion & Caching Engine** is an event-driven back
   - `GET /market/{ticker}/history?limit=50`: Paginated time-series records from PostgreSQL.
   - `GET /market/{ticker}/vwap`: Calculates or reads 5-minute rolling metrics.
 
+### 3.5. Architectural Decision: Streaming Ingestion vs. Analytical DataFrames (Pandas Omission)
+
+- **Context:** High-throughput streaming ingestion requires predictable CPU scheduling and bounded memory consumption (< 150MB RSS).
+- **Decision:** Analytical DataFrame libraries (specifically **Pandas**) are deliberately omitted from the core ingestion pipeline.
+  - **Memory & Allocation Overhead:** Constructing intermediate `DataFrame` instances introduces significant memory allocation churn, Python garbage collection pressure, and dependency overhead.
+  - **Event Loop Alignment:** The ingestion engine is built for pure non-blocking `asyncio` execution. Ticks are parsed into lean Pydantic schemas, held in native tuple buffers, and streamed directly into PostgreSQL via `asyncpg.copy_records_to_table()`.
+  - **Separation of Concerns:** Heavy analytics belong strictly to downstream client applications (e.g., quant research or Jupyter notebooks). Clients can fetch clean time-series ranges from `GET /market/{ticker}/history` and convert to Pandas or Polars locally without burdening the ingest engine.
+
 ---
 
 ## 4. Data Models & Schemas
@@ -204,3 +212,15 @@ volumes:
 - **Time-Series Engine Upgrade:** Migrate PostgreSQL table to **TimescaleDB hypertables** for automatic chunking and retention policies.
 - **Order Book Level 2/3 Reconstruction:** Expand from trade tick ingestion to full order book depth snapshots with bid/ask spreads.
 - **Low-Latency Core in C++ / Rust:** Port the ingestion and WebSocket decoding loop to C++20 or Rust, exposing bindings via PyO3 for ultra-low latency execution pipelines.
+
+---
+
+## 9. Core Engineering Skills & Design Patterns
+
+This system exercises real-time backend architecture and systems programming patterns:
+
+- **Decoupled Producer-Consumer Architecture:** Asynchronous queues decouple erratic WebSocket bursts from database I/O, preventing socket drops under peak volume.
+- **Micro-Batch Binary Bulk Ingestion:** Bypassing traditional ORM object-relational overhead in favor of low-level binary protocols (`asyncpg.copy_records_to_table`), achieving orders of magnitude higher ingestion throughput.
+- **Cache-Aside / Hot-Cold Tiering:** Preserving database stability by serving high-frequency reads from an in-memory TTL cache (Redis 7) while maintaining durable history in relational storage (PostgreSQL 16).
+- **Structured Lifespan Management:** Utilizing modern ASGI lifespan handlers for clean acquisition and graceful teardown of pooled network resources (database pools, cache connections, background ingestion tasks).
+- **End-to-End Type Safety & Data Contracts:** Strict runtime boundary validation with Pydantic v2 to isolate the persistence layer from corrupt or malformed exchange data.

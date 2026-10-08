@@ -62,6 +62,7 @@ For the full architectural specification, refer to the [System Design Document](
 
 * **Decoupled Hot Reads & Batch Writes:** Incoming trade ticks immediately update Redis with a 60-second TTL to deliver sub-5ms response times on `/market/{ticker}/latest` while isolating the persistent store from read spikes.
 * **Micro-Batch Database Flushing:** Ticks are buffered in-memory and flushed to PostgreSQL in batches (every 5 seconds or 50 records) via `asyncpg` binary copy protocols (`copy_records_to_table`) to minimize lock contention and I/O bottlenecks.
+* **Lean Stream Processing (No Pandas Overhead):** Rather than allocating heavyweight analytical DataFrames (e.g., Pandas) in the ingestion path, the engine leverages lightweight Pydantic schemas and native tuple buffers. This preserves the strict `< 150MB RSS` memory budget, prevents event loop stalling, and delivers sub-millisecond serialization. Downstream consumers can ingest REST query results into Pandas/Polars for analytical modeling as needed.
 * **Bounded Connection Pooling:** Database and cache access use managed connection pools to prevent socket exhaustion under high load.
 
 ---
@@ -75,6 +76,16 @@ For the full architectural specification, refer to the [System Design Document](
 * **Relational Storage:** PostgreSQL 16
 * **Database Drivers:** `asyncpg` (PostgreSQL), `redis-py` (Async Redis), `websockets`
 * **Containerization & Testing:** Docker, Docker Compose, `pytest`, `pytest-asyncio`
+
+---
+
+## Core Technical Competencies Demonstrated
+
+* **Asynchronous Systems & Concurrency:** Non-blocking event-driven pipeline built on Python `asyncio`, managing persistent WebSocket streams with exponential backoff reconnects and producer-consumer buffering.
+* **High-Throughput Database Engineering:** Bypassing standard ORM overhead using PostgreSQL's native binary `COPY` protocol (`asyncpg.copy_records_to_table`), composite B-Tree time-series indexing (`(ticker, timestamp DESC)`), and bounded connection pooling.
+* **In-Memory Caching & Latency Optimization:** Delivering sub-5ms reads via Redis 7, implementing cache-aside access, and enforcing strict 60-second TTL policies to prevent stale price dissemination.
+* **Runtime Data Contracts & Validation:** High-speed schema casting, timestamp parsing, and invariant verification using Pydantic v2 before events reach storage tiers.
+* **Containerized Multi-Service Architecture:** Orchestrating isolated application, caching, and persistence containers via Docker Compose with volume persistence and custom network bridges.
 
 ---
 
