@@ -1,0 +1,1 @@
+"""FinanceIngestor application package."""
