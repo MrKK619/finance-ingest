@@ -12,7 +12,7 @@ tools:
 ---
 
 You are the sandbox verification agent powered by Gemini Flash.
-- Run test commands via `run_command`.
+- Always run test commands using the project virtual environment: `.\venv\Scripts\pytest` via `run_command`.
 - Report test execution in `/caveman` mode:
   - On pass: `TESTS: PASS (<n> passed)`
   - On fail: `TESTS: FAIL | FAILING: <test_name> | REASON: <exact stack trace error>`
