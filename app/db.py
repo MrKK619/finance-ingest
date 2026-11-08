@@ -4,6 +4,21 @@ from app.config import get_settings
 
 _pool: Optional[asyncpg.Pool] = None
 
+CREATE_TABLE_DDL = """
+CREATE TABLE IF NOT EXISTS trades (
+    id BIGSERIAL PRIMARY KEY,
+    ticker VARCHAR(16) NOT NULL,
+    price DOUBLE PRECISION NOT NULL,
+    volume DOUBLE PRECISION NOT NULL,
+    timestamp TIMESTAMPTZ NOT NULL
+);
+"""
+
+CREATE_INDEX_DDL = """
+CREATE INDEX IF NOT EXISTS idx_trades_ticker_time
+ON trades (ticker, timestamp DESC);
+"""
+
 
 async def init_db_pool(min_size: int = 5, max_size: int = 20) -> asyncpg.Pool:
     global _pool
@@ -27,3 +42,12 @@ async def close_db_pool() -> None:
     if _pool is not None:
         await _pool.close()
         _pool = None
+
+
+async def init_db(pool: Optional[asyncpg.Pool] = None) -> None:
+    if pool is None:
+        pool = get_db_pool()
+    async with pool.acquire() as conn:
+        await conn.execute(CREATE_TABLE_DDL)
+        await conn.execute(CREATE_INDEX_DDL)
+
