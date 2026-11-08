@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import app.db as db
@@ -59,4 +60,55 @@ async def test_init_db_executes_ddl():
     db._pool = mock_pool
     await db.init_db()
     assert mock_conn.execute.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_insert_trades_batch_success():
+    mock_conn = AsyncMock()
+    mock_conn.copy_records_to_table = AsyncMock(return_value="COPY 2")
+    mock_pool = MagicMock()
+    mock_pool.acquire.return_value.__aenter__.return_value = mock_conn
+
+    now = datetime.now(timezone.utc)
+    records = [
+        ("BTC-USD", 65000.5, 0.5, now),
+        ("ETH-USD", 3500.0, 2.0, now),
+    ]
+
+    count = await db.insert_trades_batch(records, pool=mock_pool)
+    assert count == 2
+    mock_pool.acquire.assert_called_once()
+    mock_conn.copy_records_to_table.assert_awaited_once_with(
+        "trades",
+        records=records,
+        columns=["ticker", "price", "volume", "timestamp"],
+    )
+
+
+@pytest.mark.asyncio
+async def test_insert_trades_batch_empty():
+    mock_pool = MagicMock()
+    count = await db.insert_trades_batch([], pool=mock_pool)
+    assert count == 0
+    mock_pool.acquire.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_insert_trades_batch_default_pool():
+    mock_conn = AsyncMock()
+    mock_conn.copy_records_to_table = AsyncMock(return_value="COPY 1")
+    mock_pool = MagicMock()
+    mock_pool.acquire.return_value.__aenter__.return_value = mock_conn
+
+    db._pool = mock_pool
+
+    records = [("BTC-USD", 65000.5, 0.5, datetime.now(timezone.utc))]
+    count = await db.insert_trades_batch(records)
+    assert count == 1
+    mock_pool.acquire.assert_called_once()
+    mock_conn.copy_records_to_table.assert_awaited_once_with(
+        "trades",
+        records=records,
+        columns=["ticker", "price", "volume", "timestamp"],
+    )
 

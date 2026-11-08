@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 import asyncpg
 from app.config import get_settings
@@ -50,4 +51,21 @@ async def init_db(pool: Optional[asyncpg.Pool] = None) -> None:
     async with pool.acquire() as conn:
         await conn.execute(CREATE_TABLE_DDL)
         await conn.execute(CREATE_INDEX_DDL)
+
+
+async def insert_trades_batch(
+    records: list[tuple[str, float, float, datetime]],
+    pool: Optional[asyncpg.Pool] = None,
+) -> int:
+    if len(records) == 0:
+        return 0
+    if pool is None:
+        pool = get_db_pool()
+    async with pool.acquire() as conn:
+        await conn.copy_records_to_table(
+            "trades",
+            records=records,
+            columns=["ticker", "price", "volume", "timestamp"],
+        )
+    return len(records)
 
