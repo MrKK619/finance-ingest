@@ -97,8 +97,8 @@ For the full architectural specification, refer to the [System Design Document](
   - [x] Git workflow and environment configuration
 - [ ] **Sprint 1: Core Data Layer**
   - [ ] Pydantic tick schemas (`app/models.py`)
-  - [ ] Redis caching client with TTL management (`app/cache.py`)
-  - [ ] PostgreSQL schema & `asyncpg` connection pool setup (`app/db.py`)
+  - [x] Redis caching client with TTL management (`app/cache.py`)
+  - [x] PostgreSQL schema & `asyncpg` connection pool setup (`app/db.py`)
 - [ ] **Sprint 2: Ingestion Engine**
   - [ ] WebSocket streaming client with auto-reconnect backoff (`app/ingestor.py`)
   - [ ] Micro-batch queue & asynchronous flusher
@@ -109,29 +109,34 @@ For the full architectural specification, refer to the [System Design Document](
 
 ---
 
-## Planned Directory Structure
+## Directory Structure
 
 ```text
 FinanceIngestor/
 ├── .gitignore               # Environment and artifact exclusions
 ├── README.md                # Project overview and instructions
+├── AGENTS.md                # Token-efficient multi-agent workflow rules
 ├── requirements.txt         # Core Python dependencies
-├── docs/
-│   └── system_design.md     # In-depth system design & latency benchmarks
-├── docker-compose.yml       # Local PostgreSQL & Redis infrastructure (Planned)
+├── docker-compose.yml       # Local PostgreSQL & Redis infrastructure
 ├── Dockerfile               # Application container definition (Planned)
+├── docs/
+│   ├── system_design.md     # In-depth system design & latency benchmarks
+│   └── agent-workflow.md    # Multi-agent development & commit workflow
 ├── app/                     # Application source code (In Progress)
 │   ├── __init__.py
-│   ├── main.py              # FastAPI entry point & endpoints
+│   ├── main.py              # FastAPI entry point & health endpoint
 │   ├── config.py            # Environment settings & config
-│   ├── models.py            # Pydantic data models
-│   ├── ingestor.py          # WebSocket ingestion worker & batch buffer
+│   ├── models.py            # Pydantic data models (Planned)
+│   ├── ingestor.py          # WebSocket ingestion worker & batch buffer (Planned)
 │   ├── cache.py             # Async Redis caching wrapper
 │   └── db.py                # PostgreSQL pool & bulk insert logic
-└── tests/                   # Test suite (Planned)
+└── tests/                   # Test suite
     ├── __init__.py
-    ├── test_models.py
-    └── test_api.py
+    ├── conftest.py
+    ├── test_config.py
+    ├── test_db.py
+    ├── test_cache.py
+    └── test_health.py
 ```
 
 ---
