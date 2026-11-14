@@ -4,7 +4,6 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 An asynchronous, event-driven market data pipeline built with Python, FastAPI, Redis, and PostgreSQL. The system is designed to consume live WebSocket trade feeds (such as Coinbase Pro), maintain a sub-5ms in-memory cache in Redis for real-time reads, and persist batched time-series records into PostgreSQL using high-throughput binary copy protocols.
 
@@ -211,9 +210,3 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-
----
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
