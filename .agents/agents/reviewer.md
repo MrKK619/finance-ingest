@@ -3,7 +3,7 @@ name: reviewer
 description: Ultra-terse code review subagent utilizing /caveman-review standards.
 subagent: true
 mainAgent: false
-model: inherit
+model: flash
 commandExecutionPolicy: sandbox
 tools:
   - read_file

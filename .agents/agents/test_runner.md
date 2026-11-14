@@ -3,7 +3,7 @@ name: test_runner
 description: Runs test suites and parses test outcomes in minimal tokens.
 subagent: true
 mainAgent: false
-model: inherit
+model: flash_lite
 commandExecutionPolicy: sandbox
 tools:
   - read_file

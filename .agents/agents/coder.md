@@ -3,7 +3,7 @@ name: coder
 description: Surgical code implementation agent operating under /caveman constraints.
 subagent: true
 mainAgent: false
-model: inherit
+model: flash
 commandExecutionPolicy: sandbox
 tools:
   - read_file
